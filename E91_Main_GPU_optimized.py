@@ -141,7 +141,7 @@ def main(n_states: int, n_execs: int):
     return np.array(fidelity)
     
 def save_info_to_csv(column: list, backend_name, time_str):
-    path_name = f"./Chen_based_sims/"
+    path_name = f"./Chen_based_sims/20/"
     os.makedirs(path_name, exist_ok=True) # Ensure directory exists
     file_name = f"{backend_name}_{time_str}.csv"
     string = ",".join(map(str, column))
@@ -190,8 +190,8 @@ if __name__ == '__main__':
             global_alpha = alpha
             print(f"alpha = {global_alpha/pi:.2f} * pi")
             for states in states_list:
-                execs = int(1e2) # steps of angle β between coincident analyzers
-                n_phase = int(1e2) # steps of FSS parameter theta
+                execs = int(20) # steps of angle β between coincident analyzers
+                n_phase = int(20) # steps of FSS parameter theta
             
                 phase = np.linspace(0, 2*pi, n_phase) # θ_FSS
                 angle_between_analyzers = np.linspace(0, 2*pi, execs) # β
@@ -204,13 +204,13 @@ if __name__ == '__main__':
                     
                     out = main(n_states=states, n_execs=execs)
                     mesh.append(out)
-                    save_info_to_csv(column=out, backend_name=f"gpu_alpha_{global_alpha/pi:.2f}pi_Pt_0.9107_20x20_mesh_{states:1.1E}_states_SIM", time_str=time_now)
+                    save_info_to_csv(column=out, backend_name=f"gpu_alpha_{global_alpha/pi:.2f}pi_Pt_0.9107_{execs}x{n_phase}_mesh_{states:1.1E}_states_SIM", time_str=time_now)
                     
                 mesh = np.array(mesh, dtype=np.float64)
                 r2_values.append(correlation_computing(n_execs=execs, n_phase=n_phase, experiment=mesh))
                 
-            r2_filename = f"gpu_R2_Pt_0.9107_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
-            with open("./gpu_Chen_based_sims/" + r2_filename, "w") as file:
+            r2_filename = f"R2_Pt_0.9107_{execs}x{n_phase}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
+            with open("./Chen_based_sims/20/" + r2_filename, "w") as file:
                 file.write("'n_states','r2'\n")
                 for n, r in zip(states_list, r2_values):
                     file.write(f"{n},{r}\n")
