@@ -160,7 +160,7 @@ if __name__ == "__main__":
     # Point this to the directory containing your output CSV files. 
     # Default is the current directory '.'
     # If your files are in the "Chen_based_sims" folder, change this to "./Chen_based_sims"
-    data_directory = "./100" 
+    data_directory = "./20" 
     
     print("Starting data analysis...")
     results_df = process_simulation_files(directory=data_directory)
