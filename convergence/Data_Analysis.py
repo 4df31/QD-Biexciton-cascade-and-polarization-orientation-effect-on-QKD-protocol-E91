@@ -1,13 +1,10 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import os
 import re
 import glob
 import numpy as np
 from numpy import pi, sin, cos
 import pandas as pd
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, mean_squared_error
 import plotly.express as px
 
 # ---------------------------------------------------------
@@ -22,7 +19,7 @@ def analytical(theta: float, beta: float, alpha: float):
     ) / 2
 
 def model_noise(θ, α, β, Pt):
-    return analytical(θ, β, α/2.0) * Pt + ((1 - Pt) / 2.0)
+    return analytical(θ, β, α/2) * Pt + ((1 - Pt) / 2.0)
 
 # ---------------------------------------------------------
 # Data Processing Pipeline
@@ -35,12 +32,12 @@ def process_simulation_files(directory: str = "."):
     # Regex to capture: alpha, Pt, rows, cols, states
     pattern = r"alpha_([\d\.]+)pi_Pt_([\d\.]+)_(\d+)x(\d+)_mesh_([\d\.E\+\-]+)_states"
     
-    # We look for all csv files starting with 'gpu_alpha'
+    # We look for all csv files starting with 'lpha'
     search_path = os.path.join(directory, "*alpha_*.csv")
     file_list = glob.glob(search_path)
     
     if not file_list:
-        print(f"No files matching '*alpha_*.csv' found in {os.path.abspath(directory)}")
+        print(f"No files matching 'alpha_*.csv' found in {os.path.abspath(directory)}")
         return pd.DataFrame()
 
     results = []
@@ -85,6 +82,7 @@ def process_simulation_files(directory: str = "."):
         # Compute R2 score
         # We flatten both arrays to evaluate the 2D surface fit globally as a single scalar
         r2_val = r2_score(y_true=theoretical.flatten(), y_pred=experimental.flatten())
+        rmse_val = np.sqrt(mean_squared_error(y_true=theoretical.flatten(), y_pred=experimental.flatten()))
         
         # Append to our tracking list
         results.append({
@@ -95,7 +93,8 @@ def process_simulation_files(directory: str = "."):
             "States": states_val,
             "Rows": n_rows,
             "Cols": n_cols,
-            "R2_Score": r2_val
+            "R2_Score": r2_val,
+            "RMSE": rmse_val
         })
 
     return pd.DataFrame(results)
@@ -121,7 +120,7 @@ def generate_plots(df: pd.DataFrame):
         color="Alpha_Label",
         symbol="Alpha_Label",
         hover_data=["Rows", "Cols", "Pt"],
-        log_y=True,  # Logarithmic scale
+        log_x=True,  # Logarithmic scale
         title="Analytical Model Fidelity (R² Score) vs Number of States",
         labels={
             "States": "Number of Quantum States (Log Scale)", 
@@ -143,7 +142,7 @@ def generate_plots(df: pd.DataFrame):
     )
     
     output_html1 = "R2_Analysis_AllData.html"
-    fig1.write_html(output_html1)
+    #fig1.write_html(output_html1)
     print(f"\nScatter plot (All Data) generated and saved to: {output_html1}")
     
     # =========================================================
@@ -158,7 +157,7 @@ def generate_plots(df: pd.DataFrame):
         x="States", 
         y="mean", 
         error_y="std",
-        log_y=True,
+        log_x=True,
         title="Mean Analytical Model Fidelity vs Number of States",
         labels={
             "States": "Number of Quantum States (Log Scale)", 
@@ -180,7 +179,7 @@ def generate_plots(df: pd.DataFrame):
     )
     
     output_html2 = "R2_Analysis_ErrorBars.html"
-    fig2.write_html(output_html2)
+    #fig2.write_html(output_html2)
     print(f"Error bar plot (Mean & Std Dev) generated and saved to: {output_html2}")
 
     # ---------------------------------------------------------
@@ -196,14 +195,14 @@ if __name__ == "__main__":
     # Point this to the directory containing your output CSV files. 
     # Default is the current directory '.'
     # If your files are in the "Chen_based_sims" folder, change this to "./Chen_based_sims"
-    data_directory = "./noiseless simulation/20" 
+    data_directory = "./noiseless simulation/100" 
     
     print("Starting data analysis...")
     results_df = process_simulation_files(directory=data_directory)
     
     if not results_df.empty:
         print("\nAnalysis Summary:")
-        print(results_df[["Alpha_Label", "States", "R2_Score"]].head(15).to_string(index=False))
+        print(results_df[["Alpha_Label", "States", "R2_Score", "RMSE"]].head(15).to_string(index=False))
         print("...")
         
         # Output results to a combined CSV for safekeeping
