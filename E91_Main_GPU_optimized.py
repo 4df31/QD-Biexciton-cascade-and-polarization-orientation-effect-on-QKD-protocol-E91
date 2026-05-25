@@ -90,7 +90,7 @@ def local_run(n_states: int, angle_1_2: float):
         
         if shots_11 > 0 or shots_22 > 0:
             # Build base state preparation (NO Measurement mappings needed)
-            st = 0
+            #st = 0 # commento for noise based simulation
             q = QuantumCircuit(2)
             if st == 0:
                 q.h(0); q.rz(relative_phase, 0); q.cx(0, 1) # Singlet with phase
@@ -142,7 +142,7 @@ def main(n_states: int, n_execs: int):
     return np.array(fidelity)
     
 def save_info_to_csv(column: list, backend_name, time_str):
-    path_name = f"./noiseless simulation/100/"
+    path_name = f"./Chen_based_sims/100/"
     os.makedirs(path_name, exist_ok=True) # Ensure directory exists
     file_name = f"{backend_name}_{time_str}.csv"
     string = ",".join(map(str, column))
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     global global_alpha
 
     if single_point:
-        states_list = [1000, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]
+        states_list = [1000, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000]
         angle_between_analyzers = [pi/2]
         relative_phase = pi
         
@@ -183,7 +183,8 @@ if __name__ == '__main__':
             performance_parameter[k] = out[0]
             save_info_to_csv(column=out, backend_name=f"NOISY_single_point_SV_SIM", time_str=time_now)
     else:
-        states_list = [45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000, 1000]  # run 2
+        #states_list = [50000, 45000, 40000, 35000, 30000, 25000, 20000, 15000, 10000, 5000, 1000]  # run 2
+        states_list = [50000]  
         r2_values = list()
         alpha_values = np.array([k*pi/4.0 for k in range(6)], dtype=np.float64)
 
@@ -212,7 +213,7 @@ if __name__ == '__main__':
                 r2_values.append(correlation_computing(n_execs=execs, n_phase=n_phase, experiment=mesh))
                 
             r2_filename = f"R2_Pt_1.0000_{execs}x{n_phase}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
-            with open("./noiseless simulation/" + r2_filename, "w") as file:
+            with open("./Chen_based_sims/" + r2_filename, "w") as file:
                 file.write("'n_states','r2'\n")
                 for n, r in zip(states_list, r2_values):
                     file.write(f"{n},{r}\n")
