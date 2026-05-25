@@ -227,10 +227,11 @@ if __name__ == __main__:
     global global_alpha
     
     if single_point:
-        states_list = [1000, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]
+        #states_list = [1000, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000]
+        state_list = 15000
     
-        angle_between_analyzers = [pi/2]
-        relative_phase = pi
+        angle_between_analyzers = [pi/8]
+        relative_phase = np.linspace(pi)
         
         performance_parameter = np.zeros(len(states_list)) 
         time_now = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
@@ -244,9 +245,11 @@ if __name__ == __main__:
         # FIX: Uncommented states_list so the loop below actually has data to run on
         #states_list = [45000, 30000, 25000, 10000, 5000]  # run 1
         #states_list = [450, 300, 250, 100, 50]  # run 1
-        states_list = [40000, 35000, 20000, 15000, 1000]  # run 2
+        #states_list = [40000, 35000, 20000, 15000, 1000]  # run 2
+        state_list = [15000]
         r2_values = list()
-        alpha_values = np.array([k*pi/4.0 for k in range(6)],dtype=np.float64)
+        #alpha_values = np.array([k*pi/4.0 for k in range(6)],dtype=np.float64)
+        alpha_values = np.array([pi/4],dtype=np.float64)
     
         for alpha in alpha_values:
             global_alpha = alpha
@@ -256,7 +259,8 @@ if __name__ == __main__:
                 n_phase = int(20) # steps of FSS parameter theta between 0 and 2 pi
             
                 phase = np.linspace(0, 2*pi, n_phase) # θ_FSS
-                angle_between_analyzers = np.linspace(0, 2*pi, execs) # β
+                #angle_between_analyzers = np.linspace(0, 2*pi, execs) # β
+                anlge_between_analyzers = np.array(np.pi/4,dtype=np.float64)
             
                 time_now = datetime.now().strftime("%d_%m_%Y_%H_%M_%S")
                 mesh = list()
@@ -267,7 +271,7 @@ if __name__ == __main__:
                     #---------------------------------------------------
                     out = main(n_states=states, n_execs=execs)
                     mesh.append(out)
-                    save_info_to_csv(column=out, backend_name=f"alpha_{global_alpha/pi}pi_Pt_0.9107_20x20_mesh_{states:1.1E}_states_SIM", time_str=time_now)
+                    save_info_to_csv(column=out, backend_name=f"alpha_{global_alpha/pi}pi_Pt_0.9107_{len(angle_between_analyzers)}x{len(alpha_values)}_mesh_{states:1.1E}_states_SIM", time_str=time_now)
                     #---------------------------------------------------
                     
                 mesh = np.array(mesh, dtype=np.float64)
