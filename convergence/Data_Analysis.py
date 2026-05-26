@@ -10,17 +10,47 @@ import plotly.express as px
 # ---------------------------------------------------------
 # Analytical Model (As requested)
 # ---------------------------------------------------------
-def analytical(theta: float, beta: float, alpha: float):
-    return (
-        cos(alpha)**4 + sin(alpha)**4 +
-        2 * (sin(alpha)**2) * (cos(alpha)**2) * cos(theta) +
-        cos(alpha+beta)**4 + sin(alpha+beta)**4 +
-        2 * (sin(alpha+beta)**2) * (cos(alpha+beta)**2) * cos(theta)
-    ) / 2
-
 def model_noise(θ, α, β, Pt):
-    return analytical(θ, β, α/2) * Pt + ((1 - Pt) / 2.0)
+    # 1. Divide alpha by 2
+    a = α / 2.0
+    
+    # 2. Probability assignment without dynamic re-scaling
+    if Pt == 1.0:
+        P_HH = P_HV = P_VH = P_VV = 0.0
+    else:
+        P_HH = 0.0030
+        P_HV = 0.0138
+        P_VH = 0.0278  # Using the corrected value
+        P_VV = 0.0447
+    
+    # Pre-compute trigonometric values
+    C_a = cos(a)
+    S_a = sin(a)
+    C_ab = cos(a + β)
+    S_ab = sin(a + β)
+    C_theta = cos(θ)
+    
+    # Term 1: Pt * (1/2) * [...]
+    term1 = (Pt / 2.0) * (
+        C_a**4 + S_a**4 + 2 * (S_a**2) * (C_a**2) * C_theta +
+        C_ab**4 + S_ab**4 + 2 * (S_ab**2) * (C_ab**2) * C_theta
+    )
+    
+    # Term 2: ((P_HH + P_VV)/2) * [...]
+    term2 = ((P_HH + P_VV) / 2.0) * (
+        C_a**4 + S_a**4 + C_ab**4 + S_ab**4
+    )
+    
+    # Term 3: (P_HV + P_VH) * [...]
+    term3 = (P_HV + P_VH) * (
+        (C_a**2) * (S_a**2) + (C_ab**2) * (S_ab**2)
+    )
+    
+    return term1 + term2 + term3
 
+# ---------------------------------------------------------
+# Data Processing Pipeline
+# ---------------------------------------------------------
 def process_simulation_files(directory: str = "."):
     """
     Scans the specified directory for simulation CSV files, parses the metadata
@@ -78,9 +108,16 @@ def process_simulation_files(directory: str = "."):
         
         # Compute metrics
         # We flatten both arrays to evaluate the 2D surface fit globally as a single scalar
-        r2_val = r2_score(y_true=theoretical.flatten(), y_pred=experimental.flatten())
-        rmse_val = np.sqrt(mean_squared_error(y_true=theoretical.flatten(), y_pred=experimental.flatten()))
-        epsilon_val = 1.0 - r2_val
+        y_true_flat = theoretical.flatten()
+        y_pred_flat = experimental.flatten()
+        
+        r2_val = r2_score(y_true=y_true_flat, y_pred=y_pred_flat)
+        rmse_val = np.sqrt(mean_squared_error(y_true=y_true_flat, y_pred=y_pred_flat))
+        
+        # Manually compute epsilon: Sum((y_i - y_hat_i)^2) / Sum((y_i - y_mean)^2)
+        sum_squared_residuals = np.sum((y_true_flat - y_pred_flat) ** 2)
+        total_sum_squares = np.sum((y_true_flat - np.mean(y_true_flat)) ** 2)
+        epsilon_val = sum_squared_residuals / total_sum_squares
         
         # Append to our tracking list
         results.append({
@@ -141,7 +178,7 @@ def generate_plots(df: pd.DataFrame):
     )
     
     output_html1 = "R2_Analysis_AllData.html"
-    #fig1.write_html(output_html1)
+    fig1.write_html(output_html1)
     print(f"\nScatter plot (All Data) generated and saved to: {output_html1}")
     
     # =========================================================
@@ -178,7 +215,7 @@ def generate_plots(df: pd.DataFrame):
     )
     
     output_html2 = "R2_Analysis_ErrorBars.html"
-    #fig2.write_html(output_html2)
+    fig2.write_html(output_html2)
     print(f"Error bar plot (Mean & Std Dev) generated and saved to: {output_html2}")
 
     # ---------------------------------------------------------
@@ -195,20 +232,22 @@ if __name__ == "__main__":
     # Default is the current directory '.'
     # If your files are in the "Chen_based_sims" folder, change this to "./Chen_based_sims"
     data_directory = "./Chen_based_sims/100/" 
+    #data_directory = "./noiseless simulation/100/" 
     
     print("Starting data analysis...")
     results_df = process_simulation_files(directory=data_directory)
     
     if not results_df.empty:
         print("\nAnalysis Summary:")
-        print(results_df[["Alpha_Label", "States", "R2_Score", "RMSE"]].head(15).to_string(index=False))
+        print(results_df[["Alpha_Label", "States", "R2_Score", "RMSE", "ε"]].head(15).to_string(index=False))
         print("...")
         
         # Output results to a combined CSV for safekeeping
-        results_df.to_csv("Scores_Mixed_100.csv", index=False)
+        results_df.to_csv("Aggregated_R2_Scores.csv", index=False)
         print("\nNumerical data saved to: Aggregated_R2_Scores.csv")
         
         # Generate visual Plotly maps
         generate_plots(results_df)
     else:
         print("Data extraction failed. Please check the directory path and file names.")
+        
