@@ -30,17 +30,44 @@ except ImportError:
 # ---------------------------------------------------------
 # Analytical Model
 # ---------------------------------------------------------
-def analytical(theta: float, beta: float, alpha: float):
-    return (
-        cos(alpha)**4 + sin(alpha)**4 +
-        2 * (sin(alpha)**2) * (cos(alpha)**2) * cos(theta) +
-        cos(alpha+beta)**4 + sin(alpha+beta)**4 +
-        2 * (sin(alpha+beta)**2) * (cos(alpha+beta)**2) * cos(theta)
-    ) / 2  
-
 def model_noise(θ, β, α, Pt):
-    # α/2 for the change between spin and polarization representation
-    return analytical(θ, β, α/2) * Pt + ((1-Pt)/2.0)
+    # 1. Divide alpha by 2
+    a = α / 2.0
+    
+    # 2. Probability assignment without dynamic re-scaling
+    if Pt == 1.0:
+        P_HH = P_HV = P_VH = P_VV = 0.0
+    else:
+        P_HH = 0.0030
+        P_HV = 0.0138
+        P_VH = 0.0278  # Using the corrected value
+        P_VV = 0.0447
+    
+    # Pre-compute trigonometric values
+    C_a = cos(a)
+    S_a = sin(a)
+    C_ab = cos(a + β)
+    S_ab = sin(a + β)
+    C_theta = cos(θ)
+    
+    # Term 1: Pt * (1/2) * [...]
+    term1 = (Pt / 2.0) * (
+        C_a**4 + S_a**4 + 2 * (S_a**2) * (C_a**2) * C_theta +
+        C_ab**4 + S_ab**4 + 2 * (S_ab**2) * (C_ab**2) * C_theta
+    )
+    
+    # Term 2: ((P_HH + P_VV)/2) * [...]
+    term2 = ((P_HH + P_VV) / 2.0) * (
+        C_a**4 + S_a**4 + C_ab**4 + S_ab**4
+    )
+    
+    # Term 3: (P_HV + P_VH) * [...]
+    term3 = (P_HV + P_VH) * (
+        (C_a**2) * (S_a**2) + (C_ab**2) * (S_ab**2)
+    )
+    
+    return term1 + term2 + term3
+
 
 def correlation_computing(n_execs: int, n_phase: int, experiment: np.ndarray):
     theta = np.linspace(0, 2*pi, n_phase)
@@ -48,7 +75,7 @@ def correlation_computing(n_execs: int, n_phase: int, experiment: np.ndarray):
     alpha = global_alpha
     
     theoretical = np.array([[model_noise(θ=t, β=b, α=alpha, Pt=0.9107) for b in beta] for t in theta])
-    return r2(y_true=theoretical, y_pred=experiment)
+    return r2(y_true=theoretical.flatten(), y_pred=experiment.flatten())
 
 
 # ---------------------------------------------------------
@@ -90,7 +117,7 @@ def local_run(n_states: int, angle_1_2: float):
         
         if shots_11 > 0 or shots_22 > 0:
             # Build base state preparation (NO Measurement mappings needed)
-            #st = 0 # commento for noise based simulation
+            #st = 0 # comment for noise based simulation
             q = QuantumCircuit(2)
             if st == 0:
                 q.h(0); q.rz(relative_phase, 0); q.cx(0, 1) # Singlet with phase
@@ -142,7 +169,7 @@ def main(n_states: int, n_execs: int):
     return np.array(fidelity)
     
 def save_info_to_csv(column: list, backend_name, time_str):
-    path_name = f"./Chen_based_sims/100/"
+    path_name = f"./Results and Plots/Paper/Fig_6/"
     os.makedirs(path_name, exist_ok=True) # Ensure directory exists
     file_name = f"{backend_name}_{time_str}.csv"
     string = ",".join(map(str, column))
@@ -207,13 +234,13 @@ if __name__ == '__main__':
                     out = main(n_states=states, n_execs=execs)
                     mesh.append(out)
                     # Pt = 0.9107 for Chens based data
-                    save_info_to_csv(column=out, backend_name=f"alpha_{global_alpha/pi:.2f}pi_Pt_1.0000_{execs}x{n_phase}_mesh_{states:1.1E}_states_SIM", time_str=time_now)
+                    save_info_to_csv(column=out, backend_name=f"P_Corr_QS_alpha_{global_alpha/pi:.2f}pi_Pt_0.9107_{execs}x{n_phase}_mesh_{states:1.1E}_states_SIM", time_str=time_now)
                     
                 mesh = np.array(mesh, dtype=np.float64)
                 r2_values.append(correlation_computing(n_execs=execs, n_phase=n_phase, experiment=mesh))
                 
-            r2_filename = f"R2_Pt_1.0000_{execs}x{n_phase}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
-            with open("./Chen_based_sims/" + r2_filename, "w") as file:
+            r2_filename = f"R2_Pt_0.9107_P_Corr_QS_{execs}x{n_phase}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
+            with open("./Results and Plots/Paper/Fig_6/" + r2_filename, "w") as file:
                 file.write("'n_states','r2'\n")
                 for n, r in zip(states_list, r2_values):
                     file.write(f"{n},{r}\n")
