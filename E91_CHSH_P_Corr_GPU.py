@@ -277,7 +277,7 @@ if __name__ == '__main__':
         fixed_beta = settings['beta_pi'] * pi
         angle_between_analyzers = [fixed_beta]
         
-        states_list = [50000]
+        states_list = [15000]
         n_phase = int(1e2)
         phase = np.linspace(0, 2*pi, n_phase)
         r2_values = list()
@@ -302,7 +302,7 @@ if __name__ == '__main__':
             r2_values.append(r2_val)
             
         r2_filename = f"R2_Pt_0.9107_{calc_type.upper()}_fixed_{n_phase}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
-        with open("./Results and Plots/Paper/Fig_6/" + r2_filename, "w") as file:
+        with open("./Results and Plots/Paper/Fig_7/" + r2_filename, "w") as file:
             file.write("'n_states','r2'\n")
             for n, r in zip(states_list, r2_values):
                 file.write(f"{n},{r}\n")
