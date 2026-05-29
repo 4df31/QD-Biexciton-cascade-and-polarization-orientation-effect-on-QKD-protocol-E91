@@ -1,0 +1,28 @@
+Fig 1
+	XX-X-0 Radiative decay diagram
+Fig 2
+	Direction and angles for the protocol
+Fig 3
+	Quantum circuit for entangled states
+Fig 4
+	Convergence Test
+Fig 5
+	P_Corr^QS (entangled states) for alpha 0, π/8, π/4, 3π/8
+Fig 6
+	P_Corr^QS (mixed states) fr alpha 0, π/8, π/4, 3π/8
+Fig 7
+	using the Ekerts angles for optical α_l = l*π/8, l=0, 1, 2, 3
+		(a) → P_Corr^T [solid red line] P_Corr^QS (entangled states) [black dots] with vertical line for θ_C : P_Corr^T(α=π/8,β=π/8,θ=θ_C)>0.89
+		(b) → |CR(θ)| (entangled states) with vertical line for CR(θ_S)=2
+		(c) → |CR^M(θ)| (mixed states) with vertical line for CR(θ_S)=2 (not CR^M)
+S1 Fig
+	Interactive figures
+		(a) → P_Corr^T(α,β,θ)
+		(b) → CR(α,β,θ)
+S2 Fig
+	Ranges of recoverability figure with elipses from P_Corr^T(θ_S)
+
+
+	
+
+
