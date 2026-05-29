@@ -82,12 +82,12 @@ def analytical_CHSH(theta_FSS, alpha, beta, Pt=1.0):
     C_0 = cos(0)
     C_1 = cos(alpha)
     C_2 = cos(alpha + beta)
-    C_3 = cos(3 * pi / 8)
+    C_3 = cos(3 * pi / 4)
 
     S_0 = sin(0)
     S_1 = sin(alpha)
     S_2 = sin(alpha + beta)
-    S_3 = sin(3 * pi / 8)
+    S_3 = sin(3 * pi / 4)
 
     C_theta = cos(theta_FSS)
 
