@@ -208,7 +208,8 @@ def local_run(n_states: int, angle_1_2: float, calc_type: str):
             total_shots = sum(counts_list)
             if total_shots == 0: return 0.0
             p_corr = get_p_corr(counts_list, angle_a, angle_b)
-            return (p_corr - get_p_ant_corr) / total_shots
+            p_ant_corr = get_p_ant_corr(counts_list, angle_a, angle_b)
+            return (p_corr - p_ant_corr) / total_shots
 
         # Compute each E(phi_a, phi_b)
         E_01 = get_E_from_counts(counts_01, 0, global_alpha)
