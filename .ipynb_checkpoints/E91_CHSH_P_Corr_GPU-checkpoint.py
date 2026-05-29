@@ -139,6 +139,7 @@ def local_run(n_states: int, angle_1_2: float, calc_type: str):
         p_corr_total = 0
         for st in range(5):
             shots = counts_list[st]
+            st=0 # ucomment for PT \neq to 1
             if shots > 0:
                 q = QuantumCircuit(2)
                 if st == 0:
@@ -157,11 +158,12 @@ def local_run(n_states: int, angle_1_2: float, calc_type: str):
         return p_corr_total
     def get_p_ant_corr(counts_list, angle_a, angle_b):
         """ Helper to compute absolute correlation hits for a specific basis combination. """
-        p_corr_total = 0
+        p_ant_corr_total = 0
         for st in range(5):
             shots = counts_list[st]
             if shots > 0:
                 q = QuantumCircuit(2)
+                st=0 # ucomment for PT \neq to 1
                 if st == 0:
                     q.h(0); q.rz(relative_phase, 0); q.cx(0, 1) # Singlet with phase
                 elif st == 1: pass # |00>
