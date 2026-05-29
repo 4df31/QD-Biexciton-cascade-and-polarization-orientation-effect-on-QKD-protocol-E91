@@ -29,8 +29,6 @@ except ImportError:
 # ---------------------------------------------------------
 def model_noise(θ, α, β, Pt=1.0):
     """ Analytical model for correlation probability """
-    # 1. Divide alpha by 2
-    a = α / 2.0
     
     # 2. Probability assignment without dynamic re-scaling
     if Pt == 1.0:
@@ -42,10 +40,10 @@ def model_noise(θ, α, β, Pt=1.0):
         P_VV = 0.0447
     
     # Pre-compute trigonometric values
-    C_a = cos(a)
-    S_a = sin(a)
-    C_ab = cos(a + β)
-    S_ab = sin(a + β)
+    C_a = cos(α)
+    S_a = sin(α)
+    C_ab = cos(α + β)
+    S_ab = sin(α + β)
     C_theta = cos(θ)
     
     # Term 1: Pt * (1/2) * [...]
@@ -67,7 +65,7 @@ def model_noise(θ, α, β, Pt=1.0):
     return term1 + term2 + term3
 
 
-def analytical_CHSH(theta_FSS, alpha, beta, Pt=1.0):
+def analytical_CHSH(theta_FSS, α, β, Pt=1.0):
     """ Analytical model for CHSH quantity """
     if Pt == 1.0:
         P_HH = P_HV = P_VH = P_VV = 0.0
@@ -80,13 +78,13 @@ def analytical_CHSH(theta_FSS, alpha, beta, Pt=1.0):
     # Qiskit's ry(angle) applies a Bloch rotation corresponding to 2 * physical angle
     # The CHSH equations expect 2*phi_a terms, which exactly match the Bloch angles.
     C_0 = cos(0)
-    C_1 = cos(alpha)
-    C_2 = cos(alpha + beta)
+    C_1 = cos(α)
+    C_2 = cos(α + β)
     C_3 = cos(3 * pi / 4)
 
     S_0 = sin(0)
-    S_1 = sin(alpha)
-    S_2 = sin(alpha + beta)
+    S_1 = sin(α)
+    S_2 = sin(α + β)
     S_3 = sin(3 * pi / 4)
 
     C_theta = cos(theta_FSS)
@@ -103,23 +101,23 @@ def analytical_CHSH(theta_FSS, alpha, beta, Pt=1.0):
 
 def correlation_computing(n_execs: int, n_phase: int, experiment: np.ndarray, calc_type: str, fixed_beta=None):
     theta = np.linspace(0, 2*pi, n_phase)
-    alpha = global_alpha
+    α = global_alpha
     Pt_val = 0.9107
     
     if n_execs > 1 and fixed_beta is None:
         # Full Mesh Mode (2D)
-        beta = np.linspace(0, pi, n_execs)
+        β = np.linspace(0, pi, n_execs)
         if calc_type == 'corr':
-            theoretical = np.array([[model_noise(θ=t, β=b, α=alpha, Pt=Pt_val) for b in beta] for t in theta])
+            theoretical = np.array([[model_noise(θ=t, β=b, α=α, Pt=Pt_val) for b in β] for t in theta])
         else:
-            theoretical = np.array([[analytical_CHSH(theta_FSS=t, alpha=alpha, beta=b, Pt=Pt_val) for b in beta] for t in theta])
+            theoretical = np.array([[analytical_CHSH(theta_FSS=t, α=α, β=b, Pt=Pt_val) for b in β] for t in theta])
     else:
         # Fixed Alpha/Beta Mode (1D Sweep)
         beta_val = fixed_beta if fixed_beta is not None else 0.0
         if calc_type == 'corr':
-            theoretical = np.array([model_noise(θ=t, α=alpha, β=beta_val, Pt=Pt_val) for t in theta])
+            theoretical = np.array([model_noise(θ=t, α=α, β=beta_val, Pt=Pt_val) for t in theta])
         else:
-            theoretical = np.array([analytical_CHSH(theta_FSS=t, alpha=alpha, beta=beta_val, Pt=Pt_val) for t in theta])
+            theoretical = np.array([analytical_CHSH(theta_FSS=t, α=α, β=beta_val, Pt=Pt_val) for t in theta])
             
     return r2(y_true=theoretical.flatten(), y_pred=experiment.flatten())
 
@@ -232,7 +230,7 @@ def main(n_states: int, n_execs: int, calc_type: str):
     return np.array(fidelity)
     
 def save_info_to_csv(column: list, backend_name, time_str):
-    path_name = f"./Results and Plots/Paper/Fig_7/"
+    path_name = f"./Results and Plots/Paper/Fig_7/a_Pcorr/"
     os.makedirs(path_name, exist_ok=True) 
     file_name = f"{backend_name}_{time_str}.csv"
     string = ",".join(map(str, column))
@@ -261,8 +259,8 @@ def get_run_settings():
             
     if settings['run_mode'] == 2:
         print("\nFixed Parameter Configuration:")
-        settings['alpha_pi'] = float(input("  Enter fixed alpha (in multiples of pi, e.g., 0.25): "))
-        settings['beta_pi'] = float(input("  Enter fixed beta (in multiples of pi, e.g., 0.5): "))
+        settings['alpha_pi'] = float(input("  Enter fixed α (in multiples of pi, e.g., 0.25): "))
+        settings['beta_pi'] = float(input("  Enter fixed β (in multiples of pi, e.g., 0.5): "))
         
     return settings
 
@@ -338,9 +336,9 @@ if __name__ == '__main__':
         alpha_values = np.array([k*pi/4.0 for k in range(6)], dtype=np.float64)
 
         print(f"\n--- Running Full Mesh ({calc_type.upper()}) ---")
-        for alpha in alpha_values:
-            global_alpha = alpha
-            print(f"alpha = {global_alpha/pi:.2f} * pi")
+        for α in alpha_values:
+            global_alpha = α
+            print(f"α = {global_alpha/pi:.2f} * pi")
             for states in states_list:
                 execs = int(1e2) 
                 n_phase = int(1e2) 
@@ -362,7 +360,7 @@ if __name__ == '__main__':
                 r2_values.append(correlation_computing(n_execs=execs, n_phase=n_phase, experiment=mesh, calc_type=calc_type))
                 
             r2_filename = f"R2_Pt_0.9107_{calc_type.upper()}_QS_{execs}x{n_phase}_{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.csv"
-            with open("./Results and Plots/Paper/Fig_6/" + r2_filename, "w") as file:
+            with open("./Results and Plots/Paper/Fig_7/" + r2_filename, "w") as file:
                 file.write("'n_states','r2'\n")
                 for n, r in zip(states_list, r2_values):
                     file.write(f"{n},{r}\n")
