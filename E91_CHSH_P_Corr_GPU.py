@@ -155,27 +155,27 @@ def local_run(n_states: int, angle_1_2: float, calc_type: str):
                 p_target = probs_dict.get('00', 0.0) + probs_dict.get('11', 0.0)
                 p_corr_total += int(cp.random.binomial(shots, p_target))
         return p_corr_total
-        def get_p_ant_corr(counts_list, angle_a, angle_b):
-            """ Helper to compute absolute correlation hits for a specific basis combination. """
-            p_corr_total = 0
-            for st in range(5):
-                shots = counts_list[st]
-                if shots > 0:
-                    q = QuantumCircuit(2)
-                    if st == 0:
-                        q.h(0); q.rz(relative_phase, 0); q.cx(0, 1) # Singlet with phase
-                    elif st == 1: pass # |00>
-                    elif st == 2: q.x(1) # |01>
-                    elif st == 3: q.x(0) # |10>
-                    elif st == 4: q.x(0); q.x(1) # |11> 
-                    
-                    q.ry(angle_a, 0)
-                    q.ry(angle_b, 1)
-                    
-                    probs_dict = Statevector(q).probabilities_dict()
-                    p_target = probs_dict.get('01', 0.0) + probs_dict.get('10', 0.0)
-                    p_ant_corr_total += int(cp.random.binomial(shots, p_target))
-            return p_ant_corr_total
+    def get_p_ant_corr(counts_list, angle_a, angle_b):
+        """ Helper to compute absolute correlation hits for a specific basis combination. """
+        p_corr_total = 0
+        for st in range(5):
+            shots = counts_list[st]
+            if shots > 0:
+                q = QuantumCircuit(2)
+                if st == 0:
+                    q.h(0); q.rz(relative_phase, 0); q.cx(0, 1) # Singlet with phase
+                elif st == 1: pass # |00>
+                elif st == 2: q.x(1) # |01>
+                elif st == 3: q.x(0) # |10>
+                elif st == 4: q.x(0); q.x(1) # |11> 
+                
+                q.ry(angle_a, 0)
+                q.ry(angle_b, 1)
+                
+                probs_dict = Statevector(q).probabilities_dict()
+                p_target = probs_dict.get('01', 0.0) + probs_dict.get('10', 0.0)
+                p_ant_corr_total += int(cp.random.binomial(shots, p_target))
+        return p_ant_corr_total
 
     if calc_type == 'corr':
         mask_11 = (basis_alice == 1) & (basis_bob == 1)
