@@ -331,7 +331,7 @@ if __name__ == '__main__':
                 
     elif run_mode == 3:
         # Full Parameter Mesh setup
-        states_list = [50000]  
+        states_list = [50000,45000,40000,35000,30000]  
         r2_values = list()
         alpha_values = np.array([k*pi/4.0 for k in range(6)], dtype=np.float64)
 
